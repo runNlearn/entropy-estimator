@@ -1,0 +1,15 @@
+
+# python cache
+__pycache__
+
+# Hyperparameter search result
+hyper_search/
+
+# Saved weights of models
+saved_model/
+
+# Tensorboard log file
+tensorboard/
+
+# MAC directory metadata
+.DS_Store
