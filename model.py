@@ -36,7 +36,7 @@ def BiLSTMEntropyEstimator(num_layers=1, sort=False):
   if sort:
     x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
   x = tf.keras.layers.Reshape((1, 64))(x)
-  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256))(x)
+  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='sum')(x)
   x = tf.keras.layers.BatchNormalization()(x)
   for i in range(num_layers):
     x = fc_block(256)(x)
@@ -44,7 +44,7 @@ def BiLSTMEntropyEstimator(num_layers=1, sort=False):
   return tf.keras.Model(input, output, name='block_entropy_estimator')
 
 
-def LSTMEntropyEstimator(num_layers=1, sort=False):
+def MyEntropyEstimator(num_layers=1, sort=False):
   def fc_block(units, activation='relu'):
     block = tf.keras.Sequential([
       tf.keras.layers.Dense(units),
@@ -57,11 +57,16 @@ def LSTMEntropyEstimator(num_layers=1, sort=False):
   if sort:
     x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
   x = tf.keras.layers.Reshape((1, 64))(x)
-  x = tf.keras.layers.LSTM(256)(x)
+  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='sum')(x)
   x = tf.keras.layers.BatchNormalization()(x)
-  for i in range(num_layers):
-    x = fc_block(256)(x)
-  output = tf.keras.layers.Dense(1, activation='linear', name='entropy')(x)
+  for i in range(num_layers-1):
+    if i == num_layers - 2:
+      x = fc_block(256, 'linear')(x)
+    else:
+      x = fc_block(256)(x)
+  x = tf.keras.layers.Activation('softmax')(x)
+  x = tf.keras.layers.Lambda(lambda x: -tf.reduce_sum(tf.math.log(x) * x, -1))(x)
+  output = x
   return tf.keras.Model(input, output, name='block_entropy_estimator')
 
 
@@ -99,14 +104,3 @@ def build_hyper_conv_estimator(hp):
   )
   return model
 
-
-def MDN(units, num_components):
-  mixture_normal_layer = tfp.layers.MixtureNormal(num_components, name='mixture_normal_layer')
-  params_size = mixture_normal_layer.params_size(num_components)
-  model = tf.keras.Sequential([
-    tf.keras.layers.Reshape(target_shape=(64,)),
-    tf.keras.layers.Dense(units, activation='relu'),
-    tf.keras.layers.Dense(params_size, activation='linear'),
-    mixture_normal_layer])
-  
-  return model
