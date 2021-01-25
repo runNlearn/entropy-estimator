@@ -19,7 +19,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_float('learning_rate', 1e-3, 'Learning rate')
 flags.DEFINE_integer('epochs', 100, 'Number of epochs.')
 flags.DEFINE_integer('batches', 8000, 'Data scale multiplier to number of data.')
-flags.DEFINE_integer('batch_size', 64, 'Batch size')
+flags.DEFINE_integer('batch_size', 256, 'Batch size')
 flags.DEFINE_integer('workers', 4, 'Number of workers.')
 flags.DEFINE_integer('verbose', 2, 'level of verbose')
 flags.DEFINE_integer('tb_freq', 1000, 'update frequency(batches) of tensorboard')
