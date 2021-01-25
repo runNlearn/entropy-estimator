@@ -44,6 +44,27 @@ def BiLSTMEntropyEstimator(num_layers=1, sort=False):
   return tf.keras.Model(input, output, name='block_entropy_estimator')
 
 
+def LSTMEntropyEstimator(num_layers=1, sort=False):
+  def fc_block(units, activation='relu'):
+    block = tf.keras.Sequential([
+      tf.keras.layers.Dense(units),
+      tf.keras.layers.BatchNormalization(),
+      tf.keras.layers.Activation(activation)
+    ])
+    return block
+  input = tf.keras.Input(shape=(8, 8), name='block')
+  x = tf.keras.layers.Reshape((64,))(input)
+  if sort:
+    x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
+  x = tf.keras.layers.Reshape((1, 64))(x)
+  x = tf.keras.layers.LSTM(256)(x)
+  x = tf.keras.layers.BatchNormalization()(x)
+  for i in range(num_layers):
+    x = fc_block(256)(x)
+  output = tf.keras.layers.Dense(1, activation='linear', name='entropy')(x)
+  return tf.keras.Model(input, output, name='block_entropy_estimator')
+
+
 def build_hyper_conv_estimator(hp):
   def fc_block(units, activation='relu'):
     block = tf.keras.Sequential([
