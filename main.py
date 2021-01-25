@@ -32,6 +32,7 @@ flags.DEFINE_enum('model', 'conv', ['conv', 'bilstm'], 'Type of an entropy estim
 flags.DEFINE_enum('optimizer', 'sgd', ['sgd', 'adam', 'rmsprop'], 'Optimizer')
 flags.DEFINE_boolean('show_warning', False, 'show Tensorflow warning or not')
 flags.DEFINE_boolean('save', False, 'save training history and checkpoints')
+flags.DEFINE_boolean('sort', False, 'Sort elements of the block.')
 
 
 def save_model(ckpt_mgr, model, save_path):
@@ -74,6 +75,7 @@ def main(args):
   optimizer = FLAGS.optimizer
   num_layers = FLAGS.num_layers
   learning_rate = FLAGS.learning_rate
+  sort = FLAGS.sort
   tv = FLAGS.tv
   vv = FLAGS.vv
 
@@ -82,9 +84,9 @@ def main(args):
                     optimizer, batch_size, learning_rate)
 
   if model_name == 'conv':
-    estimator = ConvEntropyEstimator(num_layers)
+    estimator = ConvEntropyEstimator(num_layers, sort)
   elif model_name == 'bilstm':
-    estimator = BiLSTMEntropyEstimator(num_layers)
+    estimator = BiLSTMEntropyEstimator(num_layers, sort)
 
   callbacks = []
   if FLAGS.save:

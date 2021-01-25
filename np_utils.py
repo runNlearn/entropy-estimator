@@ -11,6 +11,11 @@ class RandomDataGenerator(object):
     self.random_sample_data = getattr(self, f'_random_sample_data_v{version}')
     self.rng = np.random.default_rng(seed)
     self.version = version
+    self.dct_m = get_2d_dct_matrix(8)
+    self.dct_m_T = get_2d_dct_matrix(8, True)
+
+  def dct2d(self, x):
+    return self.dct_m @ x @ self.dct_m_T
 
   def _random_sample_data_v0(self):
     v = self.rng.uniform()
@@ -127,8 +132,20 @@ def np_calc_entropy(x):
   return entropy
 
 
-def np_dct2d(x):
-  pass
+def get_2d_dct_matrix(n, transpose=False):
+  """Generate 2-D Discrete cosine transform matrix
+    Args:
+      n: a size of height and width of the matrix.
+      transpose: a boolean to select a type of the transformation matrix.
+        (inverse or forward)
+  """
+  matrix = np.sqrt(2/n) * np.array([
+    [1/np.sqrt(2)] + [np.cos(np.pi*(2*i+1)*j / (2*n)) for j in range(1, n)]
+    for i in range(0, n)
+  ]).astype('float32')
+  if not transpose:
+    matrix = matrix.transpose()
+  return matrix
 
 
 def get_batch_random_sample_data(batch_size, seed=None, version=0):
