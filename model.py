@@ -1,5 +1,4 @@
 import tensorflow as tf
-import tensorflow_probability as tfp
 
 def ConvEntropyEstimator(num_layers=1, sort=False):
   def fc_block(units, activation='relu'):
