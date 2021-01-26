@@ -34,6 +34,7 @@ flags.DEFINE_enum('optimizer', 'sgd', ['sgd', 'adam', 'rmsprop'], 'Optimizer')
 flags.DEFINE_boolean('show_warning', False, 'show Tensorflow warning or not')
 flags.DEFINE_boolean('save', False, 'save training history and checkpoints')
 flags.DEFINE_boolean('sort', False, 'Sort elements of the block.')
+flags.DEFINE_string('suffix', None, 'Additional suffix string')
 
 BEST_VALUE = None
 MONITORING_VALUE = 'val_loss'
@@ -53,7 +54,7 @@ def callback_save_model(epoch, log, ckpt_mgr, model, save_path):
   if BEST_VALUE is None or BEST_VALUE > current_value:
     save_model(ckpt_mgr, model, save_path)
     tf.print(f'Checkpoint is saved.. {current_value}')
-  BEST_VALUE = current_value
+    BEST_VALUE = current_value
 
 
 def main(args):
@@ -90,10 +91,13 @@ def main(args):
   sort = FLAGS.sort
   tv = FLAGS.tv
   vv = FLAGS.vv
+  suffix = FLAGS.suffix
 
   train_version = '{}-l{}-tv{}-vv{}-ep{}-{}-lr{}-bs{}'.format(
                     model_name, num_layers, tv, vv, epochs,
                     optimizer, batch_size, learning_rate)
+  if suffix is not None:
+    train_version += f'-{suffix}'
 
   if model_name == 'conv':
     estimator = ConvEntropyEstimator(num_layers, sort)
