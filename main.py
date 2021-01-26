@@ -28,7 +28,7 @@ flags.DEFINE_integer('tv', 0, 'Training data version')
 flags.DEFINE_integer('vv', 1, 'Validation data version')
 flags.DEFINE_integer('gpu', -1, 'GPU id, -1 means no gpu')
 flags.DEFINE_enum('data_gen_mode', 'gen', ['aot', 'gen', 'tfdata'], 'Data generation mode.')
-flags.DEFINE_enum('model', 'conv', ['conv', 'bilstm', 'my'], 'Type of an entropy estimator.')
+flags.DEFINE_enum('model', 'conv', ['conv', 'bilstm', 'bilstmsoft', 'convsoft'], 'Type of an entropy estimator.')
 flags.DEFINE_enum('optimizer', 'sgd', ['sgd', 'adam', 'rmsprop'], 'Optimizer')
 flags.DEFINE_boolean('show_warning', False, 'show Tensorflow warning or not')
 flags.DEFINE_boolean('save', False, 'save training history and checkpoints')
@@ -87,8 +87,10 @@ def main(args):
     estimator = ConvEntropyEstimator(num_layers, sort)
   elif model_name == 'bilstm':
     estimator = BiLSTMEntropyEstimator(num_layers, sort)
-  elif model_name == 'my':
-    estimator = MyEntropyEstimator(num_layers, sort)
+  elif model_name == 'bilstmsoft':
+    estimator = BiLSTMSoftmax(num_layers, sort)
+  elif model_name == 'convsoft':
+    estimator = ConvSoftmax(num_layers, sort)
     
 
   callbacks = []

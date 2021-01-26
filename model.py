@@ -44,8 +44,34 @@ def BiLSTMEntropyEstimator(num_layers=1, sort=False):
   return tf.keras.Model(input, output, name='block_entropy_estimator')
 
 
-def MyEntropyEstimator(num_layers=1, sort=False):
-  def fc_block(units, activation='relu'):
+def BiLSTMSoftmax(num_layers=1, sort=False):
+  def fc_block(units, activation='sigmoid'):
+    block = tf.keras.Sequential([
+      tf.keras.layers.Dense(units),
+      tf.keras.layers.BatchNormalization(),
+      tf.keras.layers.Activation(activation),
+    ])
+    return block
+  input = tf.keras.Input(shape=(8, 8), name='block')
+  x = tf.keras.layers.Reshape((64,))(input)
+  if sort:
+    x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
+  x = tf.keras.layers.Reshape((1, 64))(x)
+  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256, dropout=0.75), merge_mode='sum')(x)
+#  x = tf.keras.layers.BatchNormalization()(x)
+  for i in range(num_layers-1):
+    if i == num_layers - 2:
+      x = fc_block(256, 'linear')(x)
+    else:
+      x = fc_block(256)(x)
+  x = tf.keras.layers.Activation('softmax')(x)
+  x = tf.keras.layers.Lambda(lambda x: -tf.reduce_sum(tf.math.log(x) * x, -1))(x)
+  output = x
+  return tf.keras.Model(input, output, name='block_entropy_estimator')
+
+
+def ConvSoftmax(num_layers=1, sort=False):
+  def fc_block(units, activation='sigmoid'):
     block = tf.keras.Sequential([
       tf.keras.layers.Dense(units),
       tf.keras.layers.BatchNormalization(),
@@ -56,9 +82,11 @@ def MyEntropyEstimator(num_layers=1, sort=False):
   x = tf.keras.layers.Reshape((64,))(input)
   if sort:
     x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
-  x = tf.keras.layers.Reshape((1, 64))(x)
-  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='sum')(x)
-  x = tf.keras.layers.BatchNormalization()(x)
+  x = tf.keras.layers.Reshape((8, 8, 1))(x)
+  x = tf.keras.layers.Conv2D(256, (8, 8))(x)
+#  x = tf.keras.layers.BatchNormalization()(x)
+  x = tf.keras.layers.Activation('relu')(x)
+  x = tf.keras.layers.Flatten()(x)
   for i in range(num_layers-1):
     if i == num_layers - 2:
       x = fc_block(256, 'linear')(x)
