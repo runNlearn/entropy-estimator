@@ -57,8 +57,8 @@ def BiLSTMSoftmax(num_layers=1, sort=False):
   if sort:
     x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
   x = tf.keras.layers.Reshape((1, 64))(x)
-  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256, dropout=0.75), merge_mode='sum')(x)
-#  x = tf.keras.layers.BatchNormalization()(x)
+  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='sum')(x)
+  x = tf.keras.layers.BatchNormalization()(x)
   for i in range(num_layers-1):
     if i == num_layers - 2:
       x = fc_block(256, 'linear')(x)
@@ -84,7 +84,7 @@ def ConvSoftmax(num_layers=1, sort=False):
     x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
   x = tf.keras.layers.Reshape((8, 8, 1))(x)
   x = tf.keras.layers.Conv2D(256, (8, 8))(x)
-#  x = tf.keras.layers.BatchNormalization()(x)
+  x = tf.keras.layers.BatchNormalization()(x)
   x = tf.keras.layers.Activation('relu')(x)
   x = tf.keras.layers.Flatten()(x)
   for i in range(num_layers-1):
