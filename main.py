@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import json
+import functools
 import subprocess
 
 from absl import app
@@ -34,6 +35,8 @@ flags.DEFINE_boolean('show_warning', False, 'show Tensorflow warning or not')
 flags.DEFINE_boolean('save', False, 'save training history and checkpoints')
 flags.DEFINE_boolean('sort', False, 'Sort elements of the block.')
 
+BEST_VALUE = None
+MONITORING_VALUE = 'val_loss'
 
 def save_model(ckpt_mgr, model, save_path):
   if not tf.io.gfile.exists(save_path):
@@ -42,6 +45,15 @@ def save_model(ckpt_mgr, model, save_path):
     with tf.io.gfile.GFile(file_path, 'w') as f:
       model.to_yaml(stream=f, indent=4)
   ckpt_mgr.save()
+
+
+def callback_save_model(epoch, log, ckpt_mgr, model, save_path):
+  global BEST_VALUE
+  current_value = log[MONITORING_VALUE]
+  if BEST_VALUE is None or BEST_VALUE > current_value:
+    save_model(ckpt_mgr, model, save_path)
+    tf.print(f'Checkpoint is saved.. {current_value}')
+  BEST_VALUE = current_value
 
 
 def main(args):
@@ -112,7 +124,10 @@ def main(args):
       directory=save_path,
       max_to_keep=5)
     ckpt_callback = tf.keras.callbacks.LambdaCallback(
-      on_epoch_end=lambda epoch, log: save_model(ckpt_mgr, estimator, save_path))
+      on_epoch_end=functools.partial(callback_save_model,
+                             ckpt_mgr=ckpt_mgr,
+                             model=estimator,
+                             save_path=save_path))
     callbacks = [tb_callback, ckpt_callback]
 
   trainer = Trainer(estimator)
