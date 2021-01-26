@@ -93,7 +93,7 @@ def main(args):
   vv = FLAGS.vv
   suffix = FLAGS.suffix
 
-  train_version = '{}-l{}-tv{}-vv{}-ep{}-{}-lr{}-bs{}'.format(
+  train_version = '{}-l{}-tv{}-vv{}-ep{}-{}-bs{}-lr{}'.format(
                     model_name, num_layers, tv, vv, epochs,
                     optimizer, batch_size, learning_rate)
   if suffix is not None:
