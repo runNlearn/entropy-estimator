@@ -130,3 +130,4 @@ class QuasiEntropyLayer(tf.keras.layers.Layer):
   def get_config(self):
     config = super(QuasiEntropyLayer, self).get_config()
     return config
+
