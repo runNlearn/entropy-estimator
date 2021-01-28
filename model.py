@@ -1,5 +1,16 @@
 import tensorflow as tf
 
+
+__all__ = [
+  "ConvEntropyEstimator",
+  "BiLSTMEntropyEstimator",
+  "ConvSoftmax",
+  "BiLSTMSoftmax",
+  "SortLayer",
+  "QuasiEntropyLayer",
+  "get_custom_objects",
+]
+
 def ConvEntropyEstimator(num_layers=1, sort=False):
   def fc_block(units, activation='relu'):
     block = tf.keras.Sequential([
@@ -130,3 +141,15 @@ class QuasiEntropyLayer(tf.keras.layers.Layer):
   def get_config(self):
     config = super(QuasiEntropyLayer, self).get_config()
     return config
+
+
+def get_custom_objects():
+  '''Return custom objects which are not defined in Keras framework.'''
+
+  custom_objects = {
+    'SortLayer': SortLayer,
+    'QuasiEntropyLayer': QuasiEntropyLayer,
+  }
+
+  return custom_objects
+
