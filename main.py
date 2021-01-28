@@ -39,12 +39,12 @@ flags.DEFINE_string('suffix', None, 'Additional suffix string')
 BEST_VALUE = None
 MONITORING_VALUE = 'val_loss'
 
+
 def save_model(ckpt_mgr, model, save_path):
   if not tf.io.gfile.exists(save_path):
     tf.io.gfile.makedirs(save_path)
-    file_path = os.path.join(save_path, 'model_config.yaml')
-    with tf.io.gfile.GFile(file_path, 'w') as f:
-      model.to_yaml(stream=f, indent=4)
+    config_file = os.path.join(save_path, 'config.yaml')
+    tf.io.gfile.GFile(config_file, 'w').write(model.to_yaml())
   ckpt_mgr.save()
 
 
