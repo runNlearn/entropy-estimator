@@ -40,20 +40,19 @@ BEST_VALUE = None
 MONITORING_VALUE = 'val_loss'
 
 
-def save_model(ckpt_mgr, model, save_path):
+def save_model(model, save_path, epoch):
   if not tf.io.gfile.exists(save_path):
     tf.io.gfile.makedirs(save_path)
-    config_file = os.path.join(save_path, 'config.yaml')
-    tf.io.gfile.GFile(config_file, 'w').write(model.to_yaml())
-  ckpt_mgr.save()
+  h5_file = os.path.join(save_path, f'epoch-{epoch:04d}.h5')
+  model.save(h5_file, save_format='h5', include_optimizer=False)
 
 
 def callback_save_model(epoch, log, ckpt_mgr, model, save_path):
   global BEST_VALUE
   current_value = log[MONITORING_VALUE]
   if BEST_VALUE is None or BEST_VALUE > current_value:
-    save_model(ckpt_mgr, model, save_path)
-    tf.print(f'Checkpoint is saved.. {current_value}')
+    save_model(model, save_path, epoch)
+    tf.print(f'Model(weights) is saved.. {current_value}')
     BEST_VALUE = current_value
 
 
