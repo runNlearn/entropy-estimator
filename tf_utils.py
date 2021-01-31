@@ -23,3 +23,16 @@ def mp_tf_dataset(batch_size, workers, seeds=None, version=0):
       output_shapes=(tf.TensorShape((batch_size, 8, 8)),
                      tf.TensorShape((batch_size,))),
       args=(batch_size, workers, seeds, version))
+
+
+def tf_calc_entropy(x):
+  x = tf.reshape(x, (64,))
+  x = tf.cast(x, 'int32')
+  _, _, count = tf.unique_with_counts(x)
+  nums = tf.reduce_sum(count)
+  count = tf.cast(count, 'float32')
+  nums = tf.cast(nums, 'float32')
+  probs = count / nums
+  log_probs = tf.math.log(probs)
+  entropy = -tf.reduce_sum(log_probs * probs)
+  return entropy

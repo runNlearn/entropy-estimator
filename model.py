@@ -37,7 +37,7 @@ def BiLSTMEntropyEstimator(num_layers=1, sort=False):
   if sort:
     x = tf.keras.layers.Lambda(lambda x: tf.sort(x, axis=-1))(x)
   x = tf.keras.layers.Reshape((1, 64))(x)
-  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='concat')(x)
+  x = BidirectionalLSTM(256, merge_mode='sum')(x)
   x = tf.keras.layers.BatchNormalization()(x)
   for i in range(num_layers):
     x = fc_block(256)(x)
@@ -58,8 +58,7 @@ def BiLSTMSoftmax(num_layers=1, sort=False):
   if sort:
     x = SortLayer()(x)
   x = tf.keras.layers.Reshape((1, 64))(x)
-  #x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='sum')(x)
-  x = BidirectionalLSTM(256)(x)
+  x = BidirectionalLSTM(256, merge_mode='sum')(x)
   x = tf.keras.layers.BatchNormalization()(x)
   for i in range(num_layers-1):
     if i == num_layers - 2:
