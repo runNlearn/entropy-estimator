@@ -40,11 +40,27 @@ BEST_VALUE = None
 MONITORING_VALUE = 'val_loss'
 
 
-def save_model(model, save_path, epoch):
-  if not tf.io.gfile.exists(save_path):
-    tf.io.gfile.makedirs(save_path)
-  h5_file = os.path.join(save_path, f'epoch-{epoch:04d}.h5')
-  model.save(h5_file, save_format='h5', include_optimizer=False)
+def save_model(model, parent_path, epoch):
+  max_files = 5
+  if not tf.io.gfile.exists(parent_path):
+    tf.io.gfile.makedirs(parent_path)
+
+  save_file = f'epoch-{epoch:04d}.h5'
+  save_path = os.path.join(parent_path, save_file)
+  model.save(save_path, save_format='h5', include_optimizer=False)
+ 
+  log_file = os.path.join(parent_path, 'save.log')
+  with tf.io.gfile.GFile(log_file, 'w+') as f:
+    try:
+      logs = f.readlines()
+      if len(logs) >= max_files:
+        delete_file = os.path.join(parent_path, logs[0].rstrip())
+        tf.io.gfile.remove(delete_file)
+        logs = logs[1:]
+    except:
+      logs = []
+    logs.append(save_file + '\n')
+    f.write(''.join(logs))
 
 
 def callback_save_model(epoch, log, ckpt_mgr, model, save_path):
