@@ -29,10 +29,12 @@ def tf_calc_entropy(x):
   x = tf.reshape(x, (64,))
   x = tf.cast(x, 'int32')
   _, _, count = tf.unique_with_counts(x)
-  nums = tf.reduce_sum(count)
+  result = tf.unique_with_counts(x)
+  count = result.count
+  nums = tf.reduce_sum(count, axis=0)
   count = tf.cast(count, 'float32')
   nums = tf.cast(nums, 'float32')
   probs = count / nums
   log_probs = tf.math.log(probs)
-  entropy = -tf.reduce_sum(log_probs * probs)
+  entropy = -tf.reduce_sum(log_probs * probs, axis=0)
   return entropy
