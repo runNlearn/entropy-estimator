@@ -40,14 +40,12 @@ BEST_VALUE = None
 MONITORING_VALUE = 'val_loss'
 
 
-def save_model(model, parent_path, epoch):
-  max_files = 5
-  if not tf.io.gfile.exists(parent_path):
-    tf.io.gfile.makedirs(parent_path)
-
-  save_file = f'epoch-{epoch:04d}.h5'
+def save_model(model, parent_path, epoch, max_files=5, save_format='h5'):
+  save_file = f'epoch-{epoch:04d}'
+  if save_format == 'h5':
+    save_file += '.h5'
   save_path = os.path.join(parent_path, save_file)
-  model.save(save_path, save_format='h5', include_optimizer=False)
+  model.save(save_path, save_format=save_format, include_optimizer=False)
  
   log_file = os.path.join(parent_path, 'save.log')
   with tf.io.gfile.GFile(log_file, 'w+') as f:
@@ -63,11 +61,15 @@ def save_model(model, parent_path, epoch):
     f.write(''.join(logs))
 
 
-def callback_save_model(epoch, log, ckpt_mgr, model, save_path):
+def callback_save_model(epoch, log, model, parent_path):
   global BEST_VALUE
+
+  if not tf.io.gfile.exists(parent_path):
+    tf.io.gfile.makedirs(parent_path)
+
   current_value = log[MONITORING_VALUE]
   if BEST_VALUE is None or BEST_VALUE > current_value:
-    save_model(model, save_path, epoch)
+    save_model(model, parent_path, epoch)
     tf.print(f'Model(weights) is saved.. {current_value}')
     BEST_VALUE = current_value
 
@@ -127,7 +129,7 @@ def main(args):
   callbacks = []
   if FLAGS.save:
     tb_path = f'tensorboard/scalars/{train_version}'
-    save_path = f'saved_model/{train_version}'
+    save_parent_path = f'saved_model/{train_version}'
     tb_callback = tf.keras.callbacks.TensorBoard(
       log_dir=tb_path,
       histogram_freq=0,
@@ -137,17 +139,11 @@ def main(args):
       profile_batch=0,
       embeddings_freq=0,
       embeddings_metadata=None)
-    ckpt = tf.train.Checkpoint(model=estimator)
-    ckpt_mgr = tf.train.CheckpointManager(
-      checkpoint=ckpt,
-      directory=save_path,
-      max_to_keep=5)
-    ckpt_callback = tf.keras.callbacks.LambdaCallback(
+    save_callback = tf.keras.callbacks.LambdaCallback(
       on_epoch_end=functools.partial(callback_save_model,
-                             ckpt_mgr=ckpt_mgr,
-                             model=estimator,
-                             save_path=save_path))
-    callbacks = [tb_callback, ckpt_callback]
+                                     model=estimator,
+                                     parent_path=save_parent_path))
+    callbacks = [tb_callback, save_callback]
 
   trainer = Trainer(estimator)
 

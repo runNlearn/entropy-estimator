@@ -1,16 +1,6 @@
 import tensorflow as tf
 
 
-__all__ = [
-  "ConvEntropyEstimator",
-  "BiLSTMEntropyEstimator",
-  "ConvSoftmax",
-  "BiLSTMSoftmax",
-  "SortLayer",
-  "QuasiEntropyLayer",
-]
-
-
 def ConvEntropyEstimator(num_layers=1, sort=False):
   def fc_block(units, activation='relu'):
     block = tf.keras.Sequential([
@@ -68,7 +58,8 @@ def BiLSTMSoftmax(num_layers=1, sort=False):
   if sort:
     x = SortLayer()(x)
   x = tf.keras.layers.Reshape((1, 64))(x)
-  x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='concat')(x)
+  #x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256), merge_mode='sum')(x)
+  x = BidirectionalLSTM(256)(x)
   x = tf.keras.layers.BatchNormalization()(x)
   for i in range(num_layers-1):
     if i == num_layers - 2:
@@ -106,6 +97,32 @@ def ConvSoftmax(num_layers=1, sort=False):
   output = x
   return tf.keras.Model(input, output, name='block_entropy_estimator')
 
+
+@tf.keras.utils.register_keras_serializable()
+class BidirectionalLSTM(tf.keras.layers.Layer):
+  def __init__(self, units, merge_mode='sum', name='bilstm', **kwargs):
+    super(BidirectionalLSTM, self).__init__(name=name, **kwargs)
+    self.units = units
+    self.merge_mode = merge_mode
+    self.forward = tf.keras.layers.LSTM(self.units, name='forward')
+    self.backward = tf.keras.layers.LSTM(self.units,
+                                         go_backwards=True,
+                                         name='backward')
+
+  def call(self, inputs):
+    x1 = self.forward(inputs)
+    x2 = self.backward(inputs)
+    if self.merge_mode == 'sum':
+      return x1 + x2
+    elif self.merge_mode == 'concat':
+      return tf.keras.layers.concatenate([x1, x2], axis=-1)
+
+  def get_config(self):
+    config = super(BidirectionalLSTM, self).get_config()
+    custom_args = {'units': self.units, 'merge_mode': self.merge_mode}
+    config.update(custom_args)
+    return config
+  
 
 @tf.keras.utils.register_keras_serializable()
 class SortLayer(tf.keras.layers.Layer):
